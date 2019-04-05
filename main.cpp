@@ -1,7 +1,10 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <vector>
 #include <exception>
+#include <set>
+#include <iomanip>
 
 using namespace std;
 
@@ -21,33 +24,32 @@ void errDateFormat(string c)
 
 class Date {
 public:
-    Date(int new_year, int new_month, int new_day)
+    /*Date(int new_year, int new_month, int new_day)
     {
-        if ((new_month <1)||(new_month > 12))
-        {
-            error("Month value is invalid: " + to_string(new_month));
-        }
-        else this->Month = new_month;
-
-        if ((new_day < 1)||(new_day > 31))
-        {
-            error("Day value is invalid: " + to_string(new_day));
-        }
-        else this->Day = new_day;
-
-        this->Year = new_year;
+        //вызов конструктора из конструктора одного и того же объекта дает неопределенное поведение
+        //в данном случае мы получали дату 0-0-0
     }
-
+    */
     Date(string text)
     {
         stringstream ss_in(text);
         int new_day(0), new_month(0), new_year(0);
         char separator1, separator2;
-        string end = "";
-
         if ((ss_in >> new_year >> separator1 >> new_month >> separator2 >> new_day)&&(ss_in.eof()))
         {
-            Date(new_year, new_month, new_day);
+            if ((new_month <1)||(new_month > 12))
+            {
+                error("Month value is invalid: " + to_string(new_month));
+            }
+            else this->Month = new_month;
+
+            if ((new_day < 1)||(new_day > 31))
+            {
+                error("Day value is invalid: " + to_string(new_day));
+            }
+            else this->Day = new_day;
+
+            this->Year = new_year;
         }
         else
         {
@@ -56,9 +58,18 @@ public:
 
     }
 
-  int GetYear() const;
-  int GetMonth() const;
-  int GetDay() const;
+  int GetYear() const
+  {
+      return this->Year;
+  }
+  int GetMonth() const
+  {
+      return this->Month;
+  }
+  int GetDay() const
+  {
+      return this->Day;
+  }
 
 private:
   int Day;
@@ -66,22 +77,67 @@ private:
   int Year;
 };
 
-bool operator<(const Date& lhs, const Date& rhs);
+bool operator<(const Date& lhs, const Date& rhs)
+{
+    if (lhs.GetYear() == rhs.GetYear())
+    {
+        if (lhs.GetMonth() == rhs.GetMonth())
+        {
+            return (lhs.GetDay() < rhs.GetDay());
+        }
+        else return (lhs.GetMonth() < rhs.GetMonth());
+    }
+    else
+    {
+        return (lhs.GetYear() < rhs.GetYear());
+    }
+}
 
 
 
 class Database {
 public:
-  void AddEvent(const Date& date, const string& event);
-  bool DeleteEvent(const Date& date, const string& event);
-  int  DeleteDate(const Date& date);
 
-  /* ??? */void Find(const Date& date) const;
+  void AddEvent(const Date& date, const string& event)
+  {
+      data[date].insert(event);
+  }
+
+  bool DeleteEvent(const Date& date, const string& event)
+  {
+      if ((!data.empty())&&(data.find(date) != data.end())) //устраняем выход за границы
+      {
+          auto map = data.find(date);
+          for (auto & i : map->second)
+          {
+              if (i == event)
+              {
+                  data.find(date)->second.erase(event);
+                  return true;
+              }
+          }
+      }
+
+      return false;
+  }
+
+  size_t DeleteDate(const Date& date)
+  {
+      size_t n(0);
+      if ((!data.empty())&&(data.find(date) != data.end())) //устраняем выход за границы
+      {
+          n = data.at(date).size();
+          this->data.erase(date);
+      }
+      return n;
+  }
+
+  /* ??? */vector <string> Find(const Date& date) const;
 
   void Print() const;
 
 private:
-    map <Date, string> data;
+    map <Date, set <string>> data;
 
 };
 
@@ -91,20 +147,28 @@ int main() {
   string command;
   while (getline(cin, command))
   {
+
       stringstream ss_in(command);
       string operation{};
       ss_in >> operation;
+
       if (operation == "Add")
       {
-          string data{}, event{};//Journey across the universe
-          ss_in >> data;
-          ss_in.ignore(1);
-          getline(ss_in, event);
-          try {
+          try
+          {
+              ss_in.ignore(1);
+              string date{}, event{};              
+              ss_in >> date;
+              Date tmp(date);
+              ss_in.ignore(1);
+              getline(ss_in, event);
 
-          } catch (const runtime_error& e) {
+              db.AddEvent(tmp, event);
+          }
+          catch (const runtime_error& e)
+          {
               cout << e.what() << endl;
-              return 2;
+              //return 2;
           }
 
           //db.AddEvent()
@@ -113,7 +177,32 @@ int main() {
 
       else if (operation == "Del")
       {
-
+          try
+          {
+              string date{}, event{};
+              ss_in >> date;
+              ss_in.ignore(1);
+              if (getline(ss_in, event))
+              {
+                  if (db.DeleteEvent(date, event))
+                  {
+                      cout << "Deleted successfully" << endl;
+                  }
+                  else
+                  {
+                      cout << "Event not found" << endl;
+                  }
+              }
+              else
+              {
+                  cout << "Deleted " << db.DeleteDate(date) << " events" << endl;
+              }
+          }
+          catch (const runtime_error& e)
+          {
+              cout << e.what() << endl;
+              //return 2;
+          }
       }
 
       else if (operation == "Find")
