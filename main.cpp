@@ -12,7 +12,7 @@ using namespace std;
 
 void error(const string & s)
 {
-    throw runtime_error(s);
+    throw invalid_argument(s);
 }
 
 void errDateFormat(string c)
@@ -30,7 +30,7 @@ public:
         //в данном случае мы получали дату 0-0-0
     }
     */
-    Date(string text)
+    explicit Date(string text)
     {
         stringstream ss_in(text);
         int new_day(0), new_month(0), new_year(0);
@@ -163,10 +163,10 @@ public:
       {
           for (auto i : data)
           {
-              cout << i.first.Print() << endl;
+              //cout << i.first.Print() << endl;
               for (auto s : i.second)
               {
-                  cout << s << endl;
+                  cout << i.first.Print() << " " << s << endl;
               }
           }
       }
@@ -186,92 +186,77 @@ void PrintVector(const vector <string> & v)
 }
 
 int main() {
-  Database db;
 
-  string command;
-  while (getline(cin, command))
-  {
-
-      stringstream ss_in(command);
-      string operation{};
-      ss_in >> operation;
-
-      if (operation == "Add")
+      Database db;
+      string command;
+      while (getline(cin, command))
       {
           try
           {
-              ss_in.ignore(1);
-              string date{}, event{};              
-              ss_in >> date;
-              //Date tmp(date);
-              ss_in.ignore(1);
-              getline(ss_in, event);
 
-              db.AddEvent(Date(date), event);
-          }
-          catch (const runtime_error& e)
-          {
-              cout << e.what() << endl;
-              //return 2;
-          }
+              stringstream ss_in(command);
+              string operation("");
+              ss_in >> operation;
 
-          //db.AddEvent()
-
-      }
-
-      else if (operation == "Del")
-      {
-          try
-          {
-              string date{}, event{};
-              ss_in >> date;
-              ss_in.ignore(1);
-              if (getline(ss_in, event))
+              if (operation == "Add")
               {
-                  if (db.DeleteEvent(date, event))
-                  {
-                      cout << "Deleted successfully" << endl;
-                  }
-                  else
-                  {
-                      cout << "Event not found" << endl;
-                  }
+                      string date{}, event{};
+                      ss_in >> date;
+                      getline(ss_in, event);
+                      db.AddEvent(Date(date), event);
+              }
+
+              else if (operation == "Del")
+              {
+                      string date{}, event{};
+                      ss_in >> date;
+                      //ss_in.ignore(1);
+                      if (getline(ss_in, event))
+                      {
+                          if (db.DeleteEvent(Date(date), event))
+                          {
+                              cout << "Deleted successfully" << endl;
+                          }
+                          else
+                          {
+                              cout << "Event not found" << endl;
+                          }
+                      }
+                      else
+                      {
+                          cout << "Deleted " << db.DeleteDate(Date(date)) << " events" << endl;
+                      }
+              }
+
+              else if (operation == "Find")
+              {
+                      string date{};
+                      ss_in >> date;
+                      PrintVector(db.Find(Date(date)));
+              }
+
+              else if (operation == "Print")
+              {
+                  db.Print();
               }
               else
               {
-                  cout << "Deleted " << db.DeleteDate(date) << " events" << endl;
+                  if (command != "")     {cout << "Unknown command: " << command;}
               }
           }
           catch (const runtime_error& e)
           {
               cout << e.what() << endl;
-              //return 2;
           }
-      }
-
-      else if (operation == "Find")
-      {
-          try
+          catch (const invalid_argument & ia)
           {
-              ss_in.ignore(1);
-              string date{};
-              ss_in >> date;
-              PrintVector(db.Find(Date(date)));
+              cout << ia.what() << endl;
           }
-          catch (const runtime_error& e)
-          {
-              cout << e.what() << endl;
-              //return 2;
-          }
+          catch (...){}
+
+        // Считайте команды с потока ввода и обработайте каждую
       }
 
-      else if (operation == "Print")
-      {
-          db.Print();
-      }
-
-    // Считайте команды с потока ввода и обработайте каждую
-  }
 
   return 0;
 }
