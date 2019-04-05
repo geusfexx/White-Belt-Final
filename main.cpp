@@ -197,11 +197,12 @@ int main() {
               stringstream ss_in(command);
               string operation("");
               ss_in >> operation;
-
+              ss_in.ignore(1);
               if (operation == "Add")
               {
                       string date{}, event{};
                       ss_in >> date;
+                      ss_in.ignore(1);
                       getline(ss_in, event);
                       db.AddEvent(Date(date), event);
               }
@@ -210,7 +211,7 @@ int main() {
               {
                       string date{}, event{};
                       ss_in >> date;
-                      //ss_in.ignore(1);
+                      ss_in.ignore(1);
                       if (getline(ss_in, event))
                       {
                           if (db.DeleteEvent(Date(date), event))
