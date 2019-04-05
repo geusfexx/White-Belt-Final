@@ -200,21 +200,24 @@ int main() {
               ss_in.ignore(1);
               if (operation == "Add")
               {
-                      string date{}, event{};
-                      ss_in >> date;
+                      string tmp{}, event{};
+                      ss_in >> tmp;
+                      Date date(tmp);
                       ss_in.ignore(1);
                       getline(ss_in, event);
-                      db.AddEvent(Date(date), event);
+                      db.AddEvent(date, event);
               }
 
               else if (operation == "Del")
               {
-                      string date{}, event{};
-                      ss_in >> date;
+                      string tmp(""), event("");
+
+                      ss_in >> tmp;
+                      Date date(tmp);
                       ss_in.ignore(1);
                       if (getline(ss_in, event))
                       {
-                          if (db.DeleteEvent(Date(date), event))
+                          if (db.DeleteEvent(date, event))
                           {
                               cout << "Deleted successfully" << endl;
                           }
@@ -225,15 +228,16 @@ int main() {
                       }
                       else
                       {
-                          cout << "Deleted " << db.DeleteDate(Date(date)) << " events" << endl;
+                          cout << "Deleted " << db.DeleteDate(date) << " events" << endl;
                       }
               }
 
               else if (operation == "Find")
               {
-                      string date{};
-                      ss_in >> date;
-                      PrintVector(db.Find(Date(date)));
+                      string tmp("");
+                      ss_in >> tmp;
+                      Date date(tmp);
+                      PrintVector(db.Find(date));
               }
 
               else if (operation == "Print")
