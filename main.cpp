@@ -35,7 +35,7 @@ public:
         stringstream ss_in(text);
         int new_day(0), new_month(0), new_year(0);
         char separator1, separator2;
-        if ((ss_in >> new_year >> separator1 >> new_month >> separator2 >> new_day)&&(ss_in.eof()))
+        if ((ss_in >> new_year >> separator1 >> new_month >> separator2 >> new_day)&&(ss_in.eof())&&(separator1 == '-')&&(separator2 == '-'))
         {
             if ((new_month <1)||(new_month > 12))
             {
@@ -56,6 +56,17 @@ public:
             errDateFormat(ss_in.str());
         }
 
+    }
+
+    string Print() const
+    {
+        //string result("");
+        stringstream ss;
+        ss << fixed << setfill('0')
+           << setw(4) << this->GetYear() << "-"
+           << setw(2) << this->GetMonth() << "-"
+           << setw(2) << this->GetDay();
+        return ss.str();
     }
 
   int GetYear() const
@@ -132,14 +143,47 @@ public:
       return n;
   }
 
-  /* ??? */vector <string> Find(const Date& date) const;
+  /* */vector <string> Find(const Date& date) const
+  {
+      vector <string> result = {};
+      if ((!data.empty())&&(data.find(date) != data.end())) //устраняем выход за границы
+      {
 
-  void Print() const;
+          for (auto i : this->data.find(date)->second)
+          {
+              result.push_back(i);
+          }
+      }
+      return result;
+  }
+
+  void Print() const
+  {
+      if (!data.empty())
+      {
+          for (auto i : data)
+          {
+              cout << i.first.Print() << endl;
+              for (auto s : i.second)
+              {
+                  cout << s << endl;
+              }
+          }
+      }
+  }
 
 private:
     map <Date, set <string>> data;
 
 };
+
+void PrintVector(const vector <string> & v)
+{
+    for (auto i : v)
+    {
+        cout << i << endl;
+    }
+}
 
 int main() {
   Database db;
@@ -159,11 +203,11 @@ int main() {
               ss_in.ignore(1);
               string date{}, event{};              
               ss_in >> date;
-              Date tmp(date);
+              //Date tmp(date);
               ss_in.ignore(1);
               getline(ss_in, event);
 
-              db.AddEvent(tmp, event);
+              db.AddEvent(Date(date), event);
           }
           catch (const runtime_error& e)
           {
@@ -207,12 +251,23 @@ int main() {
 
       else if (operation == "Find")
       {
-
+          try
+          {
+              ss_in.ignore(1);
+              string date{};
+              ss_in >> date;
+              PrintVector(db.Find(Date(date)));
+          }
+          catch (const runtime_error& e)
+          {
+              cout << e.what() << endl;
+              //return 2;
+          }
       }
 
       else if (operation == "Print")
       {
-
+          db.Print();
       }
 
     // Считайте команды с потока ввода и обработайте каждую
